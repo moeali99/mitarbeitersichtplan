@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitarbeiterschichtplanung</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+  (function(){
+    var t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script>
+  (function() {
+    var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+    var isFile = !window.location.origin || window.location.protocol === 'file:';
+    if (port === '80' || port === '443' || port === '' || isFile) {
+      window.location.replace('http://localhost:3001');
+      return;
+    }
+    if (port === '3000') {
+      window.location.replace('http://localhost:3001');
+      return;
+    }
+  })();
+  </script>
+</head>
+<body>
+  <script>
+  (function(){
+    var VIEW_IDS = { dashboard:'dashboard-view', kalender:'kalender-view', 'meine-schichten':'meine-schichten-view', zeiterfassung:'zeiterfassung-view', schichttausch:'schichttausch-view', chat:'chat-view', verfuegbarkeit:'verfuegbarkeit-view', urlaub:'urlaub-view', aufgaben:'aufgaben-view', team:'team-view', finanzen:'finanzen-view', benutzer:'benutzer-view', schichten:'schichten-view', abteilungen:'abteilungen-view', standorte:'standorte-view', antraege:'antraege-view' };
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(function(v){ v.classList.add('hidden'); });
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+      document.querySelectorAll('.nav-link').forEach(function(l){ l.classList.remove('active'); });
+      var link = document.querySelector('a.nav-link[href="#' + id.replace('-view','') + '"]');
+      if (link) link.classList.add('active');
+    }
+    function doRoute() {
+      var hash = (location.hash || '#dashboard').slice(1);
+      var viewId = VIEW_IDS[hash] || 'dashboard-view';
+      showView(viewId);
+    }
+    function run() {
+      var ap = document.getElementById('auth-page');
+      if (ap) { ap.style.display = 'none'; ap.style.pointerEvents = 'none'; ap.style.visibility = 'hidden'; }
+      document.body.addEventListener('click', function(e) {
+        var a = e.target.closest && e.target.closest('a[href^="#"]');
+        if (a && a.getAttribute('href').length > 1) {
+          e.preventDefault();
+          e.stopPropagation();
+          location.hash = a.getAttribute('href');
+          doRoute();
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+          return;
+        }
+        var themeBtn = e.target.closest && e.target.closest('#theme-toggle');
+        if (themeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var root = document.documentElement;
+          var cur = root.getAttribute('data-theme') || 'dark';
+          if (cur === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); var i = document.getElementById('theme-icon'); if (i) i.textContent = '☀️'; }
+          else { root.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); var i = document.getElementById('theme-icon'); if (i) i.textContent = '🌙'; }
+        }
+      }, true);
+      window.addEventListener('hashchange', doRoute);
+      doRoute();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+  })();
+  </script>
+  <div id="app">
+    <div id="auth-page" class="page hidden">
+      <p style="text-align:center;padding:2rem;">Weiterleitung zur Anmeldung …</p>
+    </div>
+
+    <div id="main-app" class="page hidden">
+      <div id="port-warning" class="port-warning hidden">
+        <span>App läuft auf dem falschen Port – alle Funktionen und Daten funktionieren nur unter <a href="http://localhost:3001">http://localhost:3001</a>. Bitte diese Adresse in der Adresszeile öffnen.</span>
+      </div>
+      <header class="header">
+        <h1 class="logo">Schichtplanung</h1>
+        <nav class="nav">
+          <a href="#dashboard" class="nav-link">Dashboard</a>
+          <a href="#kalender" class="nav-link">Kalender</a>
+          <a href="#meine-schichten" class="nav-link">Meine Schichten</a>
+          <a href="#zeiterfassung" class="nav-link">Zeiterfassung</a>
+          <a href="#schichttausch" class="nav-link">Schichttausch</a>
+          <a href="#chat" class="nav-link">Chat</a>
+          <a href="#verfuegbarkeit" class="nav-link">Verfügbarkeit</a>
+          <a href="#urlaub" class="nav-link">Urlaub / Krank</a>
+          <a href="#aufgaben" class="nav-link">Aufgaben</a>
+          <a href="#team" class="nav-link">Mitarbeiter</a>
+          <a href="#finanzen" class="nav-link">Finanzen</a>
+          <span id="admin-nav" style="display:none">
+            <a href="#benutzer" class="nav-link">Benutzer</a>
+            <a href="#schichten" class="nav-link">Schichten</a>
+            <a href="#abteilungen" class="nav-link">Abteilungen</a>
+            <a href="#standorte" class="nav-link">Standorte</a>
+            <a href="#antraege" class="nav-link">Anträge</a>
+          </span>
+        </nav>
+        <div class="header-right">
+          <div class="notif-wrap">
+            <button type="button" id="notif-btn" class="btn btn-ghost" title="Benachrichtigungen" aria-label="Benachrichtigungen">
+              <span class="notif-icon">🔔</span><span id="notif-badge" class="notif-badge hidden">0</span>
+            </button>
+            <div id="notif-dropdown" class="dropdown hidden">
+              <div class="dropdown-header"><span>Benachrichtigungen</span><button type="button" id="notif-read-all" class="link-btn small">Alle lesen</button></div>
+              <div id="notif-list" class="dropdown-list"></div>
+            </div>
+          </div>
+          <button type="button" id="theme-toggle" class="btn btn-ghost" title="Hell-/Dunkelmodus umschalten" aria-label="Theme umschalten"><span id="theme-icon">🌙</span></button>
+          <span id="header-user" class="header-user-btn" role="button" tabindex="0" title="Profil / Passwort ändern"></span>
+          <button type="button" id="logout-btn" class="btn btn-ghost">Abmelden</button>
+        </div>
+      </header>
+      <main class="main">
+        <div id="dashboard-view" class="view">
+          <h2>Dashboard</h2>
+          <div id="dashboard-welcome" class="card dashboard-welcome">
+            <h3>Was Sie hier tun können</h3>
+            <ul class="welcome-list">
+              <li><a href="#kalender" class="nav-inline">Kalender</a> – Schichten im Monat/Woche ansehen, auf einen Tag klicken für Details, Check-In/Out, Tausch</li>
+              <li><a href="#meine-schichten" class="nav-inline">Meine Schichten</a> – Ihre zugewiesenen Schichten</li>
+              <li><a href="#zeiterfassung" class="nav-inline">Zeiterfassung</a> – Arbeitszeiten und Summen</li>
+              <li><a href="#verfuegbarkeit" class="nav-inline">Verfügbarkeit</a> – An welchen Tagen/Zeiten Sie können</li>
+              <li><a href="#urlaub" class="nav-inline">Urlaub / Krank</a> – Abwesenheit melden</li>
+              <li><a href="#chat" class="nav-inline">Chat</a> – Nachrichten an Team oder einzelne Kollegen</li>
+              <li><a href="#aufgaben" class="nav-inline">Aufgaben</a> – To-dos mit Fälligkeit</li>
+              <li>Button <strong>+</strong> unten rechts – Schnellzugriff (Schicht, Urlaub, Nachricht)</li>
+            </ul>
+          </div>
+          <div class="dashboard-grid">
+            <div id="stats-box" class="card"></div>
+            <div id="vacation-balance-box" class="card">
+              <h3>Resturlaub</h3>
+              <div id="vacation-balance"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Wer arbeitet heute?</h3>
+            <div id="today-shifts"></div>
+          </div>
+          <div class="card"><h3>Nächste Schichten</h3><div id="next-shifts"></div></div>
+        </div>
+        <div id="kalender-view" class="view hidden">
+          <h2>Kalenderansicht</h2>
+          <div class="cal-toolbar">
+            <div class="cal-view-toggle">
+              <button type="button" id="cal-view-month" class="btn btn-ghost btn-sm active">Monat</button>
+              <button type="button" id="cal-view-week" class="btn btn-ghost btn-sm">Woche</button>
+            </div>
+            <button type="button" id="cal-prev" class="btn btn-ghost">←</button>
+            <span id="cal-title"></span>
+            <button type="button" id="cal-next" class="btn btn-ghost">→</button>
+            <button type="button" id="cal-today" class="btn btn-primary">Heute</button>
+            <button type="button" id="cal-undo" class="btn btn-ghost hidden" title="Letzte Verschiebung rückgängig">Rückgängig</button>
+            <select id="cal-dept"></select>
+          </div>
+          <div class="cal-legend">
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-legend--today" title="Heutiger Tag"></span> Heute</span>
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-legend--free"></span> Frei</span>
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-legend--upcoming"></span> Kommend</span>
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-legend--past"></span> Gearbeitet</span>
+          </div>
+          <div id="cal-grid"></div>
+        </div>
+        <div id="meine-schichten-view" class="view hidden"><h2>Meine Schichten</h2><div id="my-shifts-list"></div></div>
+        <div id="zeiterfassung-view" class="view hidden">
+          <h2>Zeiterfassung</h2>
+          <p class="muted">Check-In/Check-Out zu deinen Schichten (z. B. im Kalender) und hier die Übersicht mit Summe. Admin kann alle Mitarbeiter filtern und CSV exportieren.</p>
+          <div class="time-toolbar card">
+            <label>Zeitraum:</label>
+            <input type="date" id="time-from" value="">
+            <span>–</span>
+            <input type="date" id="time-to" value="">
+            <span id="time-user-wrap" class="hidden"><label>Mitarbeiter:</label><select id="time-user"></select></span>
+            <button type="button" id="time-refresh" class="btn btn-primary">Aktualisieren</button>
+            <button type="button" id="time-export-csv" class="btn btn-ghost hidden">CSV exportieren</button>
+          </div>
+          <div id="time-summary" class="card muted"></div>
+          <div id="time-list" class="card"></div>
+        </div>
+        <div id="schichttausch-view" class="view hidden">
+          <h2>Schichttausch</h2>
+          <section class="card"><h3>Anfragen an mich</h3><div id="swap-requests-list"></div></section>
+          <section class="card"><h3>Verfügbare Tauschangebote</h3><div id="swap-offers-list"></div></section>
+          <section class="card"><h3>Meine Tauschangebote</h3><div id="swap-my-offers-list"></div></section>
+        </div>
+        <div id="chat-view" class="view hidden">
+          <h2 class="chat-page-title">Nachrichten</h2>
+          <div class="chat-filters">
+            <button type="button" class="chat-filter active" data-filter="alle">Alle</button>
+            <button type="button" class="chat-filter" data-filter="posteingang">Posteingang</button>
+            <button type="button" class="chat-filter" data-filter="gesendet">Gesendet</button>
+            <button type="button" class="chat-filter" data-filter="team">Team</button>
+            <button type="button" id="chat-read-all-btn" class="btn btn-ghost btn-sm">Alle als gelesen</button>
+            <button type="button" id="chat-new-btn" class="btn btn-primary">Neue Nachricht</button>
+          </div>
+          <div class="chat-layout">
+            <aside class="chat-sidebar">
+              <div id="chat-conversations"></div>
+            </aside>
+            <section class="chat-main">
+              <div id="chat-empty" class="chat-empty chat-empty-card">
+                <p class="chat-empty-icon">💬</p>
+                <p class="chat-empty-title">Noch keine Nachrichten vorhanden.</p>
+                <p class="muted">Starte eine neue Konversation, um mit deinem Team zu kommunizieren.</p>
+              </div>
+              <div id="chat-thread" class="hidden">
+                <div class="chat-thread-header">
+                  <span id="chat-header"></span>
+                  <button type="button" id="chat-thread-read-all" class="btn btn-ghost btn-sm">Als gelesen</button>
+                </div>
+                <div id="chat-messages"></div>
+                <form id="chat-form">
+                  <input type="hidden" id="chat-conv-id" name="convId">
+                  <textarea id="chat-body" name="body" placeholder="Nachricht… (Enter zum Senden)" rows="2" required></textarea>
+                  <button type="submit" class="btn btn-primary">Senden</button>
+                </form>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div id="verfuegbarkeit-view" class="view hidden"><h2>Verfügbarkeit</h2><p class="muted small">Deine verfügbaren Zeiten für die Schichtplanung (ca. 3 Monate).</p><div id="avail-list"></div></div>
+        <div id="urlaub-view" class="view hidden">
+          <h2>Urlaub / Krank</h2>
+          <div class="card"><h3>Urlaub</h3><form id="vacation-form"><input type="date" name="startDate" required><input type="date" name="endDate" required><button type="submit" class="btn btn-primary">Antrag stellen</button></form></div>
+          <div class="card"><h3>Krank</h3><p class="muted small">Melde dich krank und lade optional deinen Krankenschein (Attest) hoch.</p><form id="sick-form"><input type="date" name="startDate" required><input type="date" name="endDate" required><input type="text" name="reason" placeholder="Grund (optional)"><div class="input-wrap"><label>Krankenschein (optional, PDF/JPG/PNG/DOC, max. 10 MB)</label><input type="file" name="attest" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></div><button type="submit" class="btn btn-primary">Krankmeldung senden</button></form></div>
+          <h3>Meine Anträge</h3><div id="my-absences"></div>
+        </div>
+        <div id="aufgaben-view" class="view hidden"><h2>Aufgaben</h2><form id="task-form"><input type="text" name="title" placeholder="Neue Aufgabe" required><input type="date" name="dueDate"><button type="submit" class="btn btn-primary">Hinzufügen</button></form><div id="tasks-list"></div></div>
+        <div id="team-view" class="view hidden"><h2>Mitarbeiter</h2><p class="muted">Übersicht aller Teammitglieder.</p><div id="team-list"></div></div>
+        <div id="finanzen-view" class="view hidden">
+          <h2>Finanzen</h2>
+          <div class="card">
+            <h3>Meine Gehaltsübersicht</h3>
+            <p class="muted small">Steuerklasse und Stundenlohn wählen – Brutto- und Netto-Monatsgehalt werden automatisch berechnet (ca. 160 h/Monat). Netto ist eine vereinfachte Schätzung.</p>
+            <form id="salary-form" class="flex-between" style="flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+              <div class="input-wrap">
+                <label for="salary-tax-class">Steuerklasse</label>
+                <select id="salary-tax-class" name="tax_class">
+                  <option value="1">I – Ledig</option>
+                  <option value="2">II – Alleinerziehend</option>
+                  <option value="3">III – Verheiratet (höheres Einkommen)</option>
+                  <option value="4">IV – Verheiratet (gleiche Einkommen)</option>
+                  <option value="5">V – Verheiratet (niedrigeres Einkommen)</option>
+                  <option value="6">VI – Zweitjob</option>
+                </select>
+              </div>
+              <div class="input-wrap">
+                <label for="salary-hourly">Stundenlohn (€)</label>
+                <input type="number" id="salary-hourly" name="hourly_rate" min="0" step="0.01" placeholder="z. B. 15,50">
+              </div>
+              <div class="input-wrap">
+                <label for="salary-hours-month">Stunden pro Monat</label>
+                <input type="number" id="salary-hours-month" name="hours_per_month" value="160" min="1" max="250" step="0.5">
+              </div>
+              <button type="submit" class="btn btn-primary">Speichern &amp; berechnen</button>
+            </form>
+            <div id="salary-result" class="card" style="margin-top:1rem;display:none;">
+              <h3>Monatsgehalt (berechnet)</h3>
+              <p><strong>Brutto:</strong> <span id="salary-gross">—</span> €</p>
+              <p><strong>Netto (Schätzung):</strong> <span id="salary-net">—</span> €</p>
+            </div>
+          </div>
+        </div>
+        <div id="benutzer-view" class="view hidden"><h2>Benutzer</h2><button type="button" id="user-add" class="btn btn-primary">Neu</button><div id="users-table"></div></div>
+        <div id="schichten-view" class="view hidden"><h2>Schichten</h2><button type="button" id="shift-add" class="btn btn-primary">Schicht anlegen</button><div id="shifts-admin-list"></div></div>
+        <div id="abteilungen-view" class="view hidden"><h2>Abteilungen</h2><button type="button" id="department-add" class="btn btn-primary">Abteilung anlegen</button><div id="departments-list"></div></div>
+        <div id="standorte-view" class="view hidden"><h2>Standorte</h2><button type="button" id="location-add" class="btn btn-primary">Standort anlegen</button><div id="locations-list"></div></div>
+        <div id="antraege-view" class="view hidden"><h2>Urlaubsanträge</h2><p class="muted">Hier siehst du offene Urlaubsanträge. Genehmige oder lehne sie ab. Krankmeldungen werden automatisch erfasst.</p><div id="absences-admin"></div></div>
+      </main>
+      <div class="fab" id="fab">
+        <button type="button" class="fab-main" aria-label="Menü öffnen">+</button>
+        <div class="fab-menu">
+          <button type="button" data-action="newShift">Neue Schicht</button>
+          <button type="button" data-action="vacation">Urlaubsantrag</button>
+          <button type="button" data-action="message">Nachricht</button>
+          <button type="button" data-action="export">Export</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal" class="modal hidden"><div class="modal-inner"><button type="button" id="modal-close" class="modal-close" aria-label="Schließen">×</button><div id="modal-body"></div></div></div>
+  <div id="toast-container" class="toast-container hidden"></div>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
