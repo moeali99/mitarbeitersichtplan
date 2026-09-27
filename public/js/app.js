@@ -76,9 +76,9 @@ function route() {
 }
 
 function showPortWarningIfWrong() {
-  const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+  // Die API liegt immer auf demselben Origin wie die Seite; falsch ist nur file://.
   const el = $('#port-warning');
-  if (el && port !== '3001') el.classList.remove('hidden');
+  if (el && window.location.protocol === 'file:') el.classList.remove('hidden');
 }
 
 async function checkAuth() {

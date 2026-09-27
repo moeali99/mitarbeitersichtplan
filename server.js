@@ -78,6 +78,19 @@ app.use('/api/time', timeRoutes);
 app.use('/api/conflicts', conflictsRoutes);
 app.use('/api/salary', salaryRoutes);
 
+// Unerwartete Fehler: serverseitig loggen, dem Client nur eine allgemeine Meldung geben
+// (statt des Express-Standard-Stacktraces mit Dateipfaden).
+// eslint-disable-next-line no-unused-vars
+app.use('/api', (err, req, res, next) => {
+  console.error('[api]', req.method, req.originalUrl, err);
+  res.status(500).json({ error: 'Interner Serverfehler' });
+});
+
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('SESSION_SECRET fehlt – im Produktivbetrieb bitte in .env setzen.');
+  process.exit(1);
+}
+
 function authShellHtml({ mode, errorMsg }) {
   const isSignup = mode === 'signup';
   const title = isSignup ? 'Konto erstellen' : 'Anmelden';
