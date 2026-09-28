@@ -1,6 +1,24 @@
 # Mitarbeiterschichtplanung
 
-Webanwendung zur Schichtplanung mit Node.js, Express, SQLite (sql.js) und Vanilla JS.
+Webanwendung zur Planung und Verwaltung von Mitarbeiterschichten – mit Rollen, Kalender,
+Schichttausch, Zeiterfassung, Abwesenheiten und Team-Chat.
+
+**Tech-Stack:** Node.js · Express · SQLite (sql.js) · Vanilla JavaScript · HTML/CSS
+**Tests:** 12 automatisierte API-Tests (`npm test`)
+
+| Wochenkalender | Dashboard |
+|---|---|
+| ![Wochenkalender mit Schichten](docs/screenshots/kalender.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+| **Zeiterfassung** | **Login** |
+| ![Zeiterfassung](docs/screenshots/zeiterfassung.png) | ![Login](docs/screenshots/login.png) |
+
+### Highlights
+
+- **Konfliktprüfung** beim Planen: Überschneidungen, Ruhezeit und Wochenstunden werden geprüft, bevor eine Schicht zugewiesen wird
+- **Rollen & Rechte:** Admin- und Mitarbeiteransicht, serverseitig abgesichert
+- **Zeiterfassung** mit Check-In/Check-Out und CSV-Export für die Lohnabrechnung
+- **Schichttausch** zwischen Mitarbeitenden mit Anfragen und Angeboten
+- **Sicherheit:** bcrypt-Passwörter, Session-Timeout, Passwort-Richtlinien, Audit-Log
 
 ## Voraussetzungen
 
@@ -83,7 +101,7 @@ Kopiere `.env.example` nach `.env` und passe an:
 
 - **Auth:** Login, Registrierung (Flip-Karte), Passwort ändern, Session-Timeout (30 Min), Rollen Admin/Mitarbeiter, Passwort-Richtlinien (8 Zeichen, Zahl)
 - **Dashboard:** Stunden/ Schichten-Statistik, nächste Schichten
-- **Kalender:** Monatsansicht, Legende (frei/kommend/gearbeitet), Klick auf Tag → Modal mit Schichtdetails, Bearbeiten/Tauschen, Heute-Button, Doppelbelegungs-Check
+- **Kalender:** Monats- und Wochenansicht, Legende (frei/kommend/gearbeitet), Klick auf Tag → Modal mit Schichtdetails, Bearbeiten/Tauschen, Heute-Button, Doppelbelegungs-Check
 - **Meine Schichten:** Liste, Tausch anbieten / zurückziehen
 - **Schichttausch:** Angebote, Anfragen annehmen/ablehnen, Anfrage senden
 - **Nachrichten:** Vollständig: Konversationen (DM + Team), Liste mit Snippet/Datum/Unread, Tabs (Alle/Posteingang/Gesendet/Team), „Neue Nachricht“-Modal (An, Betreff, Nachricht), Als gelesen / Alle als gelesen, Polling 5 s, Leerzustand + Fehlerhandling
@@ -103,8 +121,8 @@ Kopiere `.env.example` nach `.env` und passe an:
 - 2FA, Profilbild
 - Weitere Rollen (Manager, HR, Finanz, Standortleiter, Read-Only) – DB nur admin/mitarbeiter
 - Schicht-Templates, Serien-Schichten, Standort im Schicht-Formular
-- Wochen-/Tagesansicht Kalender, Ruhezeit-Check
-- Weitere Abwesenheitstypen, Resturlaub-Anzeige
+- Tagesansicht im Kalender
+- Weitere Abwesenheitstypen
 - Gehalt/Lohnabrechnung/PDF – Tabellen vorhanden, keine API/UI
 - HR erweitert (Personalnummer, Dokumente), DSGVO-Export, iCal
 
@@ -139,8 +157,13 @@ Kopiere `.env.example` nach `.env` und passe an:
 ## Skripte
 
 - `npm start` – Server starten
+- `npm test` – automatisierte API-Tests (eigene Test-Datenbank, `data/` bleibt unberührt)
 - `npm run init-db` – DB manuell initialisieren (optional, passiert sonst beim Start)
-- **`npm run seed-demo`** – Demo-Daten erzeugen (Beispiel-Nutzer + Schichten für die nächsten 2 Wochen). Für Präsentation/Abgabe: einmal ausführen, dann Kalender und „Meine Schichten“ sind befüllt. Demo-Logins: `maria@example.com`, `tom@example.com`, `lena@example.com` / Passwort: `demo123`. Nach dem Seed ggf. Server neu starten.
+- **`npm run seed-demo`** – Demo-Daten erzeugen (Beispiel-Nutzer + Schichten für die nächsten 2 Wochen). Für Präsentation/Abgabe: einmal ausführen, dann Kalender und „Meine Schichten“ sind befüllt. Demo-Logins: `maria@example.com`, `tom@example.com`, `lena@example.com` u. a. / Passwort: `Demo1234` (siehe [docs/DEMO-LOGINS.md](docs/DEMO-LOGINS.md)). Nach dem Seed ggf. Server neu starten.
+
+## Team
+
+Studienprojekt an der htw saar – Mohamed Ali Aladani, Alaa Al Hasan, Rouni Bairam, Yazan Damash, Ahmad Gheibeh.
 
 ## Lizenz
 

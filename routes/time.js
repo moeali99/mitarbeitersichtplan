@@ -45,10 +45,9 @@ router.post('/check-in', (req, res) => {
   const open = getOpenCheckIn(userId);
   if (open) return res.status(409).json({ error: 'Du hast bereits einen aktiven Check-In' });
 
-  db.prepare(`
+  const { lastInsertRowid: id } = db.prepare(`
     INSERT INTO shift_check_ins (shift_assignment_id, check_in_at, source) VALUES (?, ?, ?)
   `).run(assignment.id, now(), req.body.source || 'web');
-  const id = db.prepare('SELECT last_insert_rowid() AS id').get().id;
   const row = db.prepare('SELECT * FROM shift_check_ins WHERE id = ?').get(id);
   res.status(201).json({
     id: row.id,

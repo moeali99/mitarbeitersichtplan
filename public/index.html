@@ -16,15 +16,10 @@
   </script>
   <script>
   (function() {
-    var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+    // Frontend und API kommen vom selben Server – nur beim direkten Oeffnen der Datei umleiten.
     var isFile = !window.location.origin || window.location.protocol === 'file:';
-    if (port === '80' || port === '443' || port === '' || isFile) {
+    if (isFile) {
       window.location.replace('http://localhost:3001');
-      return;
-    }
-    if (port === '3000') {
-      window.location.replace('http://localhost:3001');
-      return;
     }
   })();
   </script>
